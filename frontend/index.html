@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Police vs Thief</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    
+    <div class="game-container">
+        <header>
+            <h1>Police vs Thief</h1>
+            <h2 id="turn-indicator">Police's Turn</h2>
+            <p id="action-points">Steps remaining: 2</p>
+        </header>
+
+        <div id="board"></div>
+
+        <div class="controls-container">
+        <div id="power-ups" class="hidden">
+            <button id="power-ping" class="power-btn">📡 Directional Ping</button>
+            <button id="power-dist" class="power-btn">📏 Distance Tracker</button>
+        </div>
+    
+    <button id="end-turn-btn">End Turn / Hide Screen</button>
+</div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
