@@ -48,17 +48,6 @@ header h2 {
     margin-top: 4px;
 }
 
-/* The 16x16 Grid */
-#board {
-    display: grid;
-    /* Forces exactly 16 columns and 16 rows */
-    grid-template-columns: repeat(16, 28px);
-    grid-template-rows: repeat(16, 28px);
-    gap: 1px;
-    background-color: #222; /* Creates thin, clean grid lines */
-    border: 1px solid #333;
-}
-
 .cell {
     background-color: #121212;
     width: 100%;
@@ -118,8 +107,29 @@ header h2 {
     margin-bottom: 12px;
 }
 
+.power-btn:hover {
+    background-color: #2563eb;
+}
+
+.path-hint {
+    background-color: #eab308 !important; /* Yellow */
+    border-radius: 20%;
+    transform: scale(0.5);
+    transition: all 0.3s ease;
+}
+
+/* The 10x10 Grid */
+#board {
+    display: grid;
+    grid-template-columns: repeat(10, 42px);
+    grid-template-rows: repeat(10, 42px);
+    gap: 1px;
+    background-color: #222; 
+    border: 1px solid #333;
+}
+
+/* Button Styling Updates */
 .power-btn {
-    background-color: #3b82f6; /* Police blue */
     color: white;
     border: none;
     padding: 8px 16px;
@@ -129,14 +139,24 @@ header h2 {
     transition: 0.2s ease;
 }
 
-.power-btn:hover {
+.police-power {
+    background-color: #3b82f6; 
+}
+
+.police-power:hover {
     background-color: #2563eb;
 }
 
-/* The visual breadcrumbs left by the Directional Ping */
-.path-hint {
-    background-color: #eab308 !important; /* Yellow */
-    border-radius: 20%;
-    transform: scale(0.5);
-    transition: all 0.3s ease;
+.thief-power {
+    background-color: #ef4444; 
+}
+
+.thief-power:hover {
+    background-color: #dc2626;
+}
+
+/* Adds a red glow to the board when Teleport is primed */
+.teleport-active {
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+    border: 1px solid #ef4444 !important;
 }
