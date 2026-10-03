@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Police vs Thief — Grid Pursuit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- Clerk login gate: shown until the player signs in -->
+  <div id="auth-gate" style="display:flex;justify-content:center;align-items:center;min-height:100vh;">
+    <div id="sign-in"></div>
+  </div>
+
+  <div class="wrap" id="game-wrap" style="display:none">
+
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark">◎</span>
+        <span class="brand-text">GRID PURSUIT <span class="brand-sub">police / thief</span></span>
+      </div>
+      <div class="topbar-right">
+        <div id="user-button"></div>
+        <button class="sound-toggle" id="stats-btn" title="Your stats" aria-label="Your stats">📊</button>
+        <button class="sound-toggle" id="sound-toggle-btn" aria-label="Mute sound">🔊</button>
+        <div class="clock" id="clock">05:00</div>
+      </div>
+    </header>
+
+    <!-- Main menu -->
+    <section class="panel menu" id="menu-screen">
+      <h1>Choose a mode</h1>
+      <p class="lede">Same 10×10 board, same shortest-distance rules — pick who (or what) you're playing against.</p>
+      <p class="menu-notice" id="menu-notice" hidden></p>
+
+      <div class="mode-pick">
+        <button class="mode-card" data-mode="ai">
+          <span class="mode-icon police-ink">◎</span>
+          <span class="mode-name">Play vs AI</span>
+          <span class="mode-desc">Pick a side and a difficulty. The AI plans with shortest-path search.</span>
+        </button>
+        <button class="mode-card" data-mode="offline">
+          <span class="mode-icon thief-ink">◈</span>
+          <span class="mode-name">Offline · 2 Player</span>
+          <span class="mode-desc">Pass the device. Each of you plays Police once — fastest capture wins.</span>
+        </button>
+        <button class="mode-card" data-mode="online">
+          <span class="mode-icon good-ink">◉</span>
+          <span class="mode-name">Online · 2 Player</span>
+          <span class="mode-desc">Host a room or join with a code. Play a friend on their own device.</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Stats -->
+    <section class="panel setup" id="stats-screen" hidden>
+      <h1>Your stats</h1>
+      <p class="stats-empty lede">Sign in to start tracking your stats.</p>
+      <div class="stats-body" hidden>
+        <p class="section-label">Online · 2 Player</p>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <span class="stat-value" id="stat-online-matches">0</span>
+            <span class="stat-label">Total matches</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-value" id="stat-online-wins">0</span>
+            <span class="stat-label">Total wins</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-value" id="stat-online-losses">0</span>
+            <span class="stat-label">Total losses</span>
+          </div>
+        </div>
+        <p class="section-label">Vs AI</p>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <span class="stat-value" id="stat-ai-police">0</span>
+            <span class="stat-label">Wins as Police</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-value" id="stat-ai-thief">0</span>
+            <span class="stat-label">Wins as Thief</span>
+          </div>
+        </div>
+      </div>
+      <div class="setup-actions">
+        <button class="btn-ghost" id="stats-back-btn">← Back</button>
+      </div>
+    </section>
+
+    <!-- AI setup -->
+    <section class="panel setup" id="ai-setup-screen" hidden>
+      <h1>Set up your match</h1>
+      <p class="lede">Pick your side and how sharp the AI should be.</p>
+
+      <div class="role-pick">
+        <button class="role-card" data-role="thief">
+          <span class="role-icon thief-ink">▲</span>
+          <span class="role-name">Play as Thief</span>
+          <span class="role-desc">1 step / turn · sees 5 tiles · Stopper + Teleport</span>
+        </button>
+        <button class="role-card" data-role="police">
+          <span class="role-icon police-ink">■</span>
+          <span class="role-name">Play as Police</span>
+          <span class="role-desc">2 steps / turn · sees 3 tiles · Indicator + Jump</span>
+        </button>
+      </div>
+
+      <p class="section-label">Your character</p>
+      <div class="avatar-pick">
+        <div class="avatar-picker" id="ai-avatar-picker">
+          <div class="avatar-row">
+            <button type="button" class="avatar-arrow" data-dir="-1" aria-label="Previous character">‹</button>
+            <div class="avatar-display">
+              <span class="avatar-emoji">🐱</span>
+            </div>
+            <button type="button" class="avatar-arrow" data-dir="1" aria-label="Next character">›</button>
+          </div>
+          <p class="avatar-name">Cat</p>
+          <div class="avatar-dots"></div>
+        </div>
+      </div>
+      <div class="name-row single">
+        <label>Your name <input type="text" id="ai-player-name" maxlength="16" placeholder="You" /></label>
+      </div>
+
+      <p class="section-label">Difficulty</p>
+      <div class="diff-row">
+        <button class="diff-card" data-diff="easy"><strong>Easy</strong><span>Slower, looser AI</span></button>
+        <button class="diff-card" data-diff="intermediate"><strong>Intermediate</strong><span>Balanced reactions</span></button>
+        <button class="diff-card" data-diff="hard"><strong>Hard</strong><span>Fast, precise AI</span></button>
+      </div>
+
+      <div class="setup-actions">
+        <button class="btn-ghost" id="ai-back-btn">← Back</button>
+        <button class="btn-start" id="ai-start-btn" disabled>Start Pursuit</button>
+      </div>
+      <p class="setup-hint" id="ai-setup-hint">Pick a side and a difficulty to continue.</p>
+    </section>
+
+    <!-- Offline setup -->
+    <section class="panel setup" id="offline-setup-screen" hidden>
+      <h1>Two-player match</h1>
+      <p class="lede">You'll each play Police once, in two short rounds. Whoever catches the thief faster wins overall — if neither of you catches, it's a draw.</p>
+
+      <div class="player-pick-row">
+        <div class="player-pick">
+          <label class="player-pick-label">Player 1</label>
+          <div class="avatar-pick">
+            <div class="avatar-picker" id="p1-avatar-picker">
+          <div class="avatar-row">
+            <button type="button" class="avatar-arrow" data-dir="-1" aria-label="Previous character">‹</button>
+            <div class="avatar-display">
+              <span class="avatar-emoji">🐱</span>
+            </div>
+            <button type="button" class="avatar-arrow" data-dir="1" aria-label="Next character">›</button>
+          </div>
+          <p class="avatar-name">Cat</p>
+          <div class="avatar-dots"></div>
+        </div>
+          </div>
+          <input type="text" id="p1-name" maxlength="16" placeholder="Player 1" />
+        </div>
+        <div class="player-pick">
+          <label class="player-pick-label">Player 2</label>
+          <div class="avatar-pick">
+            <div class="avatar-picker" id="p2-avatar-picker">
+          <div class="avatar-row">
+            <button type="button" class="avatar-arrow" data-dir="-1" aria-label="Previous character">‹</button>
+            <div class="avatar-display">
+              <span class="avatar-emoji">🐱</span>
+            </div>
+            <button type="button" class="avatar-arrow" data-dir="1" aria-label="Next character">›</button>
+          </div>
+          <p class="avatar-name">Cat</p>
+          <div class="avatar-dots"></div>
+        </div>
+          </div>
+          <input type="text" id="p2-name" maxlength="16" placeholder="Player 2" />
+        </div>
+      </div>
+
+      <p class="section-label">Round 1 roles</p>
+      <button class="btn-ghost role-toggle-btn" id="swap-roles-btn">⇄ Player 1 = Police · Player 2 = Thief</button>
+
+      <div class="setup-actions">
+        <button class="btn-ghost" id="offline-back-btn">← Back</button>
+        <button class="btn-start" id="offline-start-btn">Start Round 1</button>
+      </div>
+    </section>
+
+    <!-- Online: host or join -->
+    <section class="panel setup" id="online-menu-screen" hidden>
+      <h1>Online · 2 Player</h1>
+      <p class="lede">One of you hosts a room and shares the code; the other joins with it. Same two rounds as offline — you each play Police once, fastest capture wins.</p>
+
+      <div class="role-pick">
+        <button class="role-card" id="online-host-btn">
+          <span class="role-icon good-ink">＋</span>
+          <span class="role-name">Host room</span>
+          <span class="role-desc">Enter your name, get a room code to share</span>
+        </button>
+        <button class="role-card" id="online-join-btn">
+          <span class="role-icon good-ink">→</span>
+          <span class="role-name">Join room</span>
+          <span class="role-desc">Enter your name and the host's room code</span>
+        </button>
+      </div>
+
+      <div class="setup-actions">
+        <button class="btn-ghost" id="online-back-btn">← Back</button>
+      </div>
+    </section>
+
+    <!-- Online: host -->
+    <section class="panel setup" id="online-host-screen" hidden>
+      <h1>Host a room</h1>
+      <div id="host-form">
+        <p class="lede">Enter your name, then create the room and send the code to your opponent.</p>
+        <p class="section-label">Your character</p>
+        <div class="avatar-pick">
+          <div class="avatar-picker" id="host-avatar-picker">
+          <div class="avatar-row">
+            <button type="button" class="avatar-arrow" data-dir="-1" aria-label="Previous character">‹</button>
+            <div class="avatar-display">
+              <span class="avatar-emoji">🐱</span>
+            </div>
+            <button type="button" class="avatar-arrow" data-dir="1" aria-label="Next character">›</button>
+          </div>
+          <p class="avatar-name">Cat</p>
+          <div class="avatar-dots"></div>
+        </div>
+        </div>
+        <div class="name-row single">
+          <label>Your name <input type="text" id="host-name" maxlength="16" placeholder="Host" /></label>
+        </div>
+        <p class="section-label">Round 1 roles</p>
+        <button class="btn-ghost role-toggle-btn" id="host-role-btn">⇄ You = Police · Opponent = Thief</button>
+        <div class="setup-actions">
+          <button class="btn-ghost" id="host-back-btn">← Back</button>
+          <button class="btn-start" id="host-create-btn">Create room</button>
+        </div>
+      </div>
+      <div id="host-lobby" hidden>
+        <p class="lede">Share this code with your opponent. The match starts as soon as they join.</p>
+        <p class="room-code" id="room-code">-----</p>
+        <button class="btn-ghost" id="copy-code-btn">Copy code</button>
+        <div class="setup-actions">
+          <button class="btn-ghost" id="host-cancel-btn">Cancel room</button>
+        </div>
+      </div>
+      <p class="setup-hint" id="host-status"></p>
+    </section>
+
+    <!-- Online: join -->
+    <section class="panel setup" id="online-join-screen" hidden>
+      <h1>Join a room</h1>
+      <p class="lede">Enter your name and the room code your host gave you.</p>
+      <p class="section-label">Your character</p>
+      <div class="avatar-pick">
+        <div class="avatar-picker" id="join-avatar-picker">
+          <div class="avatar-row">
+            <button type="button" class="avatar-arrow" data-dir="-1" aria-label="Previous character">‹</button>
+            <div class="avatar-display">
+              <span class="avatar-emoji">🐱</span>
+            </div>
+            <button type="button" class="avatar-arrow" data-dir="1" aria-label="Next character">›</button>
+          </div>
+          <p class="avatar-name">Cat</p>
+          <div class="avatar-dots"></div>
+        </div>
+      </div>
+      <div class="name-row">
+        <label>Your name <input type="text" id="join-name" maxlength="16" placeholder="Guest" /></label>
+        <label>Room code <input type="text" id="join-code" maxlength="5" placeholder="ABCDE" autocomplete="off" autocapitalize="characters" spellcheck="false" class="code-input" /></label>
+      </div>
+      <div class="setup-actions">
+        <button class="btn-ghost" id="join-back-btn">← Back</button>
+        <button class="btn-start" id="join-go-btn">Join room</button>
+      </div>
+      <p class="setup-hint" id="join-status"></p>
+    </section>
+
+    <!-- Game screen -->
+    <section class="game-area" id="game-screen" hidden>
+
+      <p class="round-banner" id="round-banner" hidden></p>
+
+      <aside class="dash">
+
+        <div class="dash-block">
+          <h2>Time remaining</h2>
+          <p class="dash-clock" id="dash-clock">05:00</p>
+        </div>
+
+        <div class="dash-block">
+          <h2 class="police-ink" id="police-label">Police</h2>
+          <p class="dash-sub">Items (recharge after 5 moves)</p>
+          <ul class="item-list" id="police-items"></ul>
+        </div>
+
+        <div class="dash-block">
+          <h2 class="thief-ink" id="thief-label">Thief</h2>
+          <p class="dash-sub">Items (recharge after 5 moves)</p>
+          <ul class="item-list" id="thief-items"></ul>
+        </div>
+
+        <div class="dash-block">
+          <h2>Proximity compass</h2>
+          <div class="compass" id="compass">
+            <div class="compass-dial" id="compass-dial"></div>
+            <p class="compass-label" id="compass-label">—</p>
+          </div>
+        </div>
+
+      </aside>
+
+      <div class="board-col">
+        <div class="board" id="board"></div>
+        <p class="hint" id="hint">Click a lit tile to move.</p>
+      </div>
+
+      <aside class="hud">
+
+        <div class="hud-block">
+          <h2>Status</h2>
+          <p id="turn-indicator" class="turn-indicator">—</p>
+          <p id="turn-timer" class="turn-timer" hidden>⏱ 8s to act</p>
+          <p id="indicator-readout" class="indicator-readout" hidden></p>
+          <p id="log" class="log">The chase begins.</p>
+        </div>
+
+        <div class="hud-block">
+          <h2>Powers</h2>
+          <div class="power-row" id="power-row"></div>
+        </div>
+
+        <div class="hud-block legend">
+          <h2>Legend</h2>
+          <ul>
+            <li><span class="dot police-ink"></span> Police</li>
+            <li><span class="dot thief-ink"></span> Thief</li>
+            <li><span class="dot range-ink"></span> Vision reach</li>
+          </ul>
+        </div>
+
+      </aside>
+    </section>
+
+    <!-- Round result (offline, between round 1 and 2) -->
+    <section class="panel result" id="round-result-screen" hidden>
+      <h1 id="round-result-title">Round 1 complete</h1>
+      <p id="round-result-desc" class="lede">—</p>
+      <button class="btn-start" id="next-round-btn">Start Round 2</button>
+    </section>
+
+    <!-- Final result -->
+    <section class="panel result" id="result-screen" hidden>
+      <h1 id="result-title">—</h1>
+      <p id="result-desc" class="lede">—</p>
+      <div class="result-details" id="result-details" hidden></div>
+      <button class="btn-start" id="restart-btn">Back to menu</button>
+    </section>
+
+  </div>
+
+  <div class="pass-overlay" id="pass-overlay" hidden>
+    <div class="pass-card">
+      <p class="pass-label">Pass the device to</p>
+      <p class="pass-name" id="pass-name">—</p>
+      <p class="pass-count" id="pass-count">3</p>
+    </div>
+  </div>
+
+  <!-- PeerJS: peer-to-peer connection for Online mode (jsDelivr is the fallback host) -->
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+  <script>window.Peer || document.write('<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"><\/script>');</script>
+  <script src="js/pathfinding.js"></script>
+  <script src="js/sound.js"></script>
+  <script src="js/game.js"></script>
+  <script src="js/online.js"></script>
+  <script src="js/stats.js"></script>
+
+  <!-- Clerk authentication -->
+  <script
+    defer
+    crossorigin="anonymous"
+    src="https://faithful-sturgeon-3448.clerk.accounts.dev/npm/@clerk/ui@1/dist/ui.browser.js"
+    type="text/javascript"
+  ></script>
+
+  <script
+    defer
+    crossorigin="anonymous"
+    data-clerk-publishable-key="pk_test_ZmFpdGhmdWwtc3R1cmdlb24tMzQ0OC5jbGVyay5hY2NvdW50cy5kZXYk"
+    src="https://faithful-sturgeon-3448.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js"
+    type="text/javascript"
+  ></script>
+
+  <script>
+    window.addEventListener('load', async function () {
+      try {
+        await Clerk.load({
+          ui: { ClerkUI: window.__internal_ClerkUICtor },
+        })
+      } catch (err) {
+        console.error('Clerk failed to load — sign-in is unavailable right now.', err)
+        document.getElementById('sign-in').textContent =
+          "Couldn't reach the sign-in service. Check your connection and reload the page."
+        return
+      }
+
+      if (Clerk.isSignedIn) {
+        document.getElementById('auth-gate').style.display = 'none'
+        document.getElementById('game-wrap').style.display = ''
+        Clerk.mountUserButton(document.getElementById('user-button'))
+        Stats.init(Clerk.user)
+      } else {
+        Clerk.mountSignIn(document.getElementById('sign-in'))
+      }
+
+      // Keep stats wired up if Clerk's signed-in state changes later without
+      // a full page reload (e.g. finishing sign-in from the embedded widget).
+      Clerk.addListener(({ user }) => {
+        if (user && document.getElementById('game-wrap').style.display === 'none') {
+          document.getElementById('auth-gate').style.display = 'none'
+          document.getElementById('game-wrap').style.display = ''
+          Clerk.mountUserButton(document.getElementById('user-button'))
+          Stats.init(user)
+        } else if (!user) {
+          Stats.init(null)
+        }
+      })
+    })
+  </script>
+</body>
+</html>

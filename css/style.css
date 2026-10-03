@@ -1,0 +1,868 @@
+:root {
+  --bg: #10141c;
+  --panel: #171d29;
+  --panel-2: #1c2432;
+  --line: #2a3346;
+  --text: #e8ecf4;
+  --text-dim: #8b96ab;
+
+  --police: #4f8fd1;
+  --police-glow: rgba(79, 143, 209, 0.28);
+  --thief: #d18a4f;
+  --thief-glow: rgba(209, 138, 79, 0.28);
+  --range: #3a4a63;
+
+  --good: #63b788;
+  --bad: #d1614f;
+
+  --font-display: "Space Grotesk", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+/* The `hidden` attribute's default `display:none` comes from the browser's
+   user-agent stylesheet, which loses to any of our own rules that also set
+   `display` (like `.game-area { display: grid }`) — regardless of selector
+   specificity, because author CSS always outranks the browser default. This
+   line re-asserts it so `hidden` reliably wins over every screen's layout. */
+[hidden] { display: none !important; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 20% -10%, #1a2233 0%, transparent 55%),
+    var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  display: flex;
+  justify-content: center;
+  padding: 18px 20px 40px;
+}
+
+/* Wide shell so the board can use the screen; setup/result panels stay a
+   readable width via .panel's own max-width below. */
+.wrap {
+  width: 100%;
+  max-width: 1680px;
+}
+
+/* ---------- topbar ---------- */
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.brand {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.05rem;
+  letter-spacing: 0.02em;
+}
+
+.brand-mark { color: var(--thief); font-size: 1.2rem; }
+.brand-sub {
+  font-family: var(--font-body);
+  font-weight: 400;
+  color: var(--text-dim);
+  font-size: 0.8rem;
+  margin-left: 4px;
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sound-toggle {
+  font-size: 1.1rem;
+  line-height: 1;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 8px 11px;
+  cursor: pointer;
+  color: var(--text);
+}
+.sound-toggle:hover { border-color: var(--thief); }
+
+.clock {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--text);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  padding: 6px 16px;
+  border-radius: 6px;
+  font-variant-numeric: tabular-nums;
+}
+.clock.low { color: var(--bad); border-color: var(--bad); }
+
+/* ---------- setup / result panels ---------- */
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 40px 32px;
+  text-align: center;
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.panel h1 {
+  font-family: var(--font-display);
+  font-size: 1.7rem;
+  margin: 0 0 10px;
+}
+
+.lede {
+  color: var(--text-dim);
+  max-width: 480px;
+  margin: 0 auto 28px;
+  line-height: 1.5;
+}
+
+/* ---------- mode picker (main menu) ---------- */
+
+.mode-pick {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+@media (max-width: 720px) {
+  .mode-pick { grid-template-columns: 1fr; }
+}
+
+.menu-notice {
+  max-width: 560px;
+  margin: -12px auto 22px;
+  padding: 9px 14px;
+  font-size: 0.85rem;
+  color: var(--bad);
+  background: rgba(209, 97, 79, 0.1);
+  border: 1px solid rgba(209, 97, 79, 0.35);
+  border-radius: 6px;
+}
+
+.mode-card {
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 26px 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  color: var(--text);
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+.mode-card:hover { transform: translateY(-2px); border-color: var(--thief); }
+.mode-icon { font-size: 1.8rem; }
+.mode-name { font-family: var(--font-display); font-weight: 600; font-size: 1.05rem; }
+.mode-desc { font-size: 0.8rem; color: var(--text-dim); text-align: center; line-height: 1.4; }
+
+/* ---------- shared setup bits ---------- */
+
+.section-label {
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  margin: 22px 0 10px;
+  font-weight: 600;
+}
+
+.setup-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-top: 26px;
+}
+
+.btn-ghost {
+  font-family: var(--font-body);
+  font-size: 0.88rem;
+  background: transparent;
+  color: var(--text-dim);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 10px 18px;
+  cursor: pointer;
+}
+.btn-ghost:hover { color: var(--text); border-color: var(--thief); }
+
+.setup-hint {
+  margin: 10px 0 0;
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--text-dim);
+}
+.setup-hint.ok { color: var(--good); }
+.setup-hint.err { color: var(--bad); }
+.good-ink { color: var(--good); }
+
+/* ---------- stats screen ---------- */
+
+.stats-empty { text-align: center; }
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 12px;
+  max-width: 560px;
+  margin: 0 auto 22px;
+}
+
+.stat-card {
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 16px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.stat-value {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.8rem;
+  color: var(--thief);
+}
+
+.stat-label {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  text-align: center;
+}
+
+/* ---------- avatar picker ---------- */
+
+.avatar-pick {
+  display: flex;
+  justify-content: center;
+  margin: 0 auto 6px;
+}
+
+.avatar-picker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  user-select: none;
+}
+
+.avatar-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.avatar-arrow {
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+  font-size: 1.1rem;
+  color: var(--text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+.avatar-arrow:hover { border-color: var(--thief); color: var(--thief); }
+
+.avatar-display {
+  width: 90px;
+  height: 90px;
+  border-radius: 14px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.6rem;
+  cursor: grab;
+  touch-action: pan-y;
+}
+.avatar-display:active { cursor: grabbing; }
+
+.avatar-name {
+  margin: 8px 0 6px;
+  text-align: center;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+
+.avatar-dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+.avatar-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--line);
+}
+.avatar-dot.active { background: var(--thief); }
+
+/* ---------- offline: per-player avatar + name ---------- */
+
+.player-pick-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+@media (max-width: 560px) {
+  .player-pick-row { grid-template-columns: 1fr; }
+}
+
+.player-pick { display: flex; flex-direction: column; align-items: center; }
+
+.player-pick-label {
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+}
+
+.player-pick input {
+  width: 100%;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 10px 12px;
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  text-align: center;
+}
+.player-pick input:focus { outline: none; border-color: var(--thief); }
+
+/* ---------- online lobby ---------- */
+
+.name-row.single { grid-template-columns: 1fr; max-width: 280px; }
+
+.code-input {
+  text-transform: uppercase;
+  letter-spacing: 0.3em;
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-align: center;
+}
+
+.room-code {
+  margin: 4px 0 16px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 3rem;
+  letter-spacing: 0.35em;
+  padding-left: 0.35em; /* re-centers the trailing letter-spacing */
+  color: var(--good);
+  user-select: all;
+}
+
+.role-pick {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  max-width: 560px;
+  margin: 0 auto 26px;
+}
+
+@media (max-width: 560px) {
+  .role-pick { grid-template-columns: 1fr; }
+}
+
+.role-card {
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 22px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  color: var(--text);
+  font-family: var(--font-body);
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.role-card:hover { transform: translateY(-2px); }
+.role-card.selected { border-color: var(--thief); }
+.role-card.selected[data-role="police"] { border-color: var(--police); }
+
+.role-icon { font-size: 1.6rem; }
+.role-name { font-family: var(--font-display); font-weight: 600; }
+.role-desc { font-size: 0.78rem; color: var(--text-dim); text-align: center; }
+
+/* ---------- difficulty picker ---------- */
+
+.diff-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+@media (max-width: 560px) {
+  .diff-row { grid-template-columns: 1fr; }
+}
+
+.diff-card {
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  color: var(--text);
+  font-family: var(--font-body);
+}
+.diff-card strong { font-family: var(--font-display); font-size: 0.9rem; }
+.diff-card span { font-size: 0.72rem; color: var(--text-dim); }
+.diff-card.selected { border-color: var(--thief); }
+.diff-card.selected strong { color: var(--thief); }
+
+/* ---------- offline name / role setup ---------- */
+
+.name-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+@media (max-width: 560px) {
+  .name-row { grid-template-columns: 1fr; }
+}
+
+.name-row label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  text-align: left;
+}
+
+.name-row input {
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 10px 12px;
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+}
+.name-row input:focus { outline: none; border-color: var(--thief); }
+
+.role-toggle-btn { display: block; margin: 0 auto; }
+
+.btn-start {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1rem;
+  background: var(--thief);
+  color: #1a1006;
+  border: none;
+  border-radius: 6px;
+  padding: 12px 30px;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+.btn-start:disabled { opacity: 0.35; cursor: not-allowed; }
+.btn-start:not(:disabled):hover { opacity: 0.88; }
+
+/* ---------- game layout ---------- */
+
+.round-banner {
+  grid-column: 1 / -1;
+  margin: 0 0 4px;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 8px 12px;
+}
+
+.game-area {
+  display: grid;
+  grid-template-columns: minmax(200px, 250px) minmax(0, 1fr) minmax(240px, 290px);
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .game-area { grid-template-columns: 1fr; }
+  .board-col { order: 1; }
+  .dash { order: 2; }
+  .hud { order: 3; }
+}
+
+.board-col { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+
+/* ---------- left dash ---------- */
+
+.dash { display: flex; flex-direction: column; gap: 14px; }
+
+.dash-block {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px 16px;
+}
+
+.dash-block h2 {
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  margin: 0 0 6px;
+  font-weight: 600;
+}
+.dash-block h2.police-ink, .dash-block h2.thief-ink { opacity: 0.9; }
+
+.dash-clock {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.dash-clock.low { color: var(--bad); }
+
+.dash-sub { margin: 0 0 8px; font-size: 0.72rem; color: var(--text-dim); }
+
+.item-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.item-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.82rem;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 5px 9px;
+}
+.item-list .tag {
+  font-size: 0.68rem;
+  font-family: var(--font-display);
+  font-weight: 600;
+  padding: 1px 7px;
+  border-radius: 10px;
+}
+.item-list .tag.ready { background: rgba(99, 183, 136, 0.18); color: var(--good); }
+.item-list .tag.spent { background: rgba(139, 150, 171, 0.15); color: var(--text-dim); }
+
+.compass {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding-top: 4px;
+}
+
+.compass-dial {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 2px solid var(--range);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+.compass-dial::before {
+  content: "";
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--range);
+  transition: background 0.25s ease, box-shadow 0.25s ease;
+}
+
+/* Far (>7 tiles): red, blinking — thief is well clear right now. */
+.compass-dial.tier-far {
+  border-color: var(--bad);
+  animation: dialBlink 0.7s steps(1, jump-none) infinite;
+}
+.compass-dial.tier-far::before { background: var(--bad); }
+
+/* Distant (5–7 tiles): red, steady — no blink. */
+.compass-dial.tier-distant { border-color: var(--bad); }
+.compass-dial.tier-distant::before {
+  background: var(--bad);
+  box-shadow: 0 0 10px rgba(209, 97, 79, 0.5);
+}
+
+/* Close (under 5 tiles): yellow, blinking — the closer, more urgent tier. */
+.compass-dial.tier-close {
+  border-color: #e0b23c;
+  animation: dialBlink 0.5s steps(1, jump-none) infinite;
+}
+.compass-dial.tier-close::before {
+  background: #e0b23c;
+  box-shadow: 0 0 12px rgba(224, 178, 60, 0.6);
+}
+
+@keyframes dialBlink {
+  50% { opacity: 0.25; }
+}
+
+.compass-label {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+/* The board takes the largest square that fits both the column width and the
+   window height (minus topbar, banner and hint), so it fills the screen. */
+.board {
+  display: grid;
+  width: min(100%, calc(100vh - 190px));
+  min-width: min(100%, 340px);
+  aspect-ratio: 1 / 1;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.tile {
+  position: relative;
+  border: 1px solid rgba(42, 51, 70, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: default;
+  background: transparent;
+}
+
+.tile.in-range {
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.03);
+}
+.tile.in-range:hover { background: rgba(255, 255, 255, 0.08); }
+
+.tile.vision {
+  box-shadow: inset 0 0 0 100px var(--range-overlay, transparent);
+}
+
+.token {
+  width: 62%;
+  height: 62%;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(1rem, 2.6vmin, 2rem);
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+
+.token.police { background: var(--police); color: #071522; box-shadow: 0 0 14px var(--police-glow); }
+.token.thief { background: var(--thief); color: #1a1006; box-shadow: 0 0 14px var(--thief-glow); }
+
+.token.hidden-mark {
+  background: transparent;
+  border: 1px dashed var(--text-dim);
+  color: var(--text-dim);
+  font-size: 0.8rem;
+}
+
+.indicator-arrow {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  font-size: 0.75rem;
+  color: var(--police);
+}
+
+.hint { color: var(--text-dim); font-size: 0.9rem; margin: 0; text-align: center; }
+
+/* ---------- HUD ---------- */
+
+.hud { display: flex; flex-direction: column; gap: 14px; }
+
+.hud-block {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.hud-block h2 {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  text-transform: none;
+  color: var(--text-dim);
+  margin: 0 0 10px;
+  font-weight: 600;
+}
+
+.turn-indicator {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: 0 0 8px;
+}
+.turn-indicator.police-turn { color: var(--police); }
+.turn-indicator.thief-turn { color: var(--thief); }
+
+.turn-timer {
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  margin: 0 0 8px;
+}
+.turn-timer.low { color: var(--bad); animation: pulse 0.8s ease-in-out infinite; }
+
+.indicator-readout {
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--police);
+  background: rgba(79, 143, 209, 0.12);
+  border: 1px solid rgba(79, 143, 209, 0.3);
+  border-radius: 5px;
+  padding: 6px 9px;
+  margin: 0 0 8px;
+}
+
+.log { color: var(--text-dim); font-size: 0.85rem; line-height: 1.5; margin: 0; min-height: 2.6em; }
+
+.power-row { display: flex; flex-direction: column; gap: 8px; }
+
+.power-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 10px 12px;
+  color: var(--text);
+  font-family: var(--font-body);
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+}
+.power-btn strong { font-family: var(--font-display); font-size: 0.88rem; }
+.power-btn span { font-size: 0.74rem; color: var(--text-dim); }
+.power-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.power-btn:not(:disabled):hover { border-color: var(--thief); }
+
+.legend ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; font-size: 0.82rem; color: var(--text-dim); }
+.legend li { display: flex; align-items: center; gap: 8px; }
+.dot { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+.dot.police-ink { background: var(--police); }
+.dot.thief-ink { background: var(--thief); }
+.dot.range-ink { background: var(--range); }
+
+.police-ink { color: var(--police); }
+.thief-ink { color: var(--thief); }
+
+/* ---------- result ---------- */
+
+.result h1.win { color: var(--good); }
+.result h1.lose { color: var(--bad); }
+.result h1.draw { color: var(--text-dim); }
+
+.result-details {
+  max-width: 460px;
+  margin: 0 auto 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.result-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-size: 0.86rem;
+}
+.result-row.winner-row { border-color: var(--good); }
+.result-row .name { font-family: var(--font-display); font-weight: 600; }
+.result-row .time { font-variant-numeric: tabular-nums; color: var(--text-dim); }
+.result-row.winner-row .time { color: var(--good); }
+
+/* ---------- offline hand-off blur ---------- */
+
+.pass-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(16, 20, 28, 0.72);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.pass-card {
+  text-align: center;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 34px 46px;
+}
+
+.pass-label { margin: 0 0 6px; color: var(--text-dim); font-size: 0.85rem; }
+.pass-name {
+  margin: 0 0 18px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.5rem;
+  color: var(--thief);
+}
+.pass-count {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 2.6rem;
+  font-variant-numeric: tabular-nums;
+}

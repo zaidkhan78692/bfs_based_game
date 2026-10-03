@@ -1,0 +1,8 @@
+{
+  "name": "police-vs-thief-game",
+  "private": true,
+  "description": "Grid Pursuit — static site plus one Vercel Function (api/record-stat.js) that securely updates player stats.",
+  "dependencies": {
+    "@clerk/backend": "^3.0.0"
+  }
+}
